@@ -792,9 +792,12 @@ main(int argc, char *argv[])
 	root = RootWindow(dpy, screen);
 	if (!embed || !(parentwin = strtol(embed, NULL, 0)))
 		parentwin = root;
-	if (!XGetWindowAttributes(dpy, parentwin, &wa))
-		die("could not get embedding window attributes: 0x%lx",
+	if (!XGetWindowAttributes(dpy, parentwin, &wa)) {
+		fprintf(stderr, "could not get embedding window attributes: 0x%lx",
 		    parentwin);
+		wa.width = 1920;
+		wa.height = 1080;
+	}
 	drw = drw_create(dpy, screen, root, wa.width, wa.height);
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
