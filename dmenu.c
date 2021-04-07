@@ -13,6 +13,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+#include <X11/Xresource.h>
 #ifdef XINERAMA
 #include <X11/extensions/Xinerama.h>
 #endif
@@ -559,39 +560,17 @@ readstdin(void)
 static void
 recolor(void)
 {
-    size_t l = 0;
-    ssize_t nread;
-    char *line_buf = NULL;
-	const char *home;
-	char xresources_file[100];
-	if (!(home = getenv("HOME"))) {
-		home = getpwuid(getuid())->pw_dir;
-	}
-	sprintf(xresources_file, "%s/.Xresources", home);
-    FILE *fp = fopen(xresources_file, "r");
-    char norbg[8], norfg[8], selbg[8], selfg[8];
-
-    if (fp == NULL) {
-        fprintf(stderr, "failed to open Xresources\n");
-    }
-    while ((nread = getline(&line_buf, &l, fp)) != -1) {
-        if (norbg[0] != '#') {
-            sscanf(line_buf, "*." NORBG ": %7s", norbg);
-        } if (norfg[0] != '#') {
-            sscanf(line_buf, "*." NORFG ": %7s", norfg);
-        } if (selbg[0] != '#') {
-            sscanf(line_buf, "*." SELBG ": %7s", selbg);
-        } if (selfg[0] != '#') {
-            sscanf(line_buf, "*." SELFG ": %7s", selfg);
-        }
-    }
-    fclose(fp);
-
-
-    colors[SchemeNorm][ColFg] = norfg;
-    colors[SchemeNorm][ColBg] = norbg;
-    colors[SchemeSel][ColFg] = selfg;
-    colors[SchemeSel][ColBg] = selbg;
+	char *type;
+	XrmValue col;
+	XrmDatabase xrdb = XrmGetStringDatabase(XResourceManagerString(dpy));
+	XrmGetResource(xrdb, NORFG, "String", &type, &col);
+	colors[SchemeNorm][ColFg] = col.addr;
+	XrmGetResource(xrdb, NORBG, "String", &type, &col);
+	colors[SchemeNorm][ColBg] = col.addr;
+	XrmGetResource(xrdb, SELFG, "String", &type, &col);
+	colors[SchemeSel][ColFg] = col.addr;
+	XrmGetResource(xrdb, SELBG, "String", &type, &col);
+	colors[SchemeSel][ColBg] = col.addr;
 }
 
 static void
@@ -744,6 +723,8 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
+	if (!(dpy = XOpenDisplay(NULL)))
+		die("cannot open display");
 	recolor();
 	XWindowAttributes wa;
 	int i, fast = 0;
@@ -786,8 +767,6 @@ main(int argc, char *argv[])
 
 	if (!setlocale(LC_CTYPE, "") || !XSupportsLocale())
 		fputs("warning: no locale support\n", stderr);
-	if (!(dpy = XOpenDisplay(NULL)))
-		die("cannot open display");
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);
 	if (!embed || !(parentwin = strtol(embed, NULL, 0)))
