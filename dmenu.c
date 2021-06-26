@@ -560,16 +560,15 @@ readstdin(void)
 static void
 recolor(void)
 {
-	char *type;
 	XrmValue col;
 	XrmDatabase xrdb = XrmGetStringDatabase(XResourceManagerString(dpy));
-	XrmGetResource(xrdb, NORFG, "String", &type, &col);
+	XrmGetResource(xrdb, NORFG, "String", &(char *){NULL}, &col);
 	colors[SchemeNorm][ColFg] = col.addr;
-	XrmGetResource(xrdb, NORBG, "String", &type, &col);
+	XrmGetResource(xrdb, NORBG, "String", &(char *){NULL}, &col);
 	colors[SchemeNorm][ColBg] = col.addr;
-	XrmGetResource(xrdb, SELFG, "String", &type, &col);
+	XrmGetResource(xrdb, SELFG, "String", &(char *){NULL}, &col);
 	colors[SchemeSel][ColFg] = col.addr;
-	XrmGetResource(xrdb, SELBG, "String", &type, &col);
+	XrmGetResource(xrdb, SELBG, "String", &(char *){NULL}, &col);
 	colors[SchemeSel][ColBg] = col.addr;
 }
 
